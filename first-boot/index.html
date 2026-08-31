@@ -510,10 +510,9 @@ const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls)
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const wait = ms => new Promise(r => setTimeout(r, ms));
 const params = new URLSearchParams(location.search);
-// A phone is narrow and touch-driven; a narrow desktop pane keeps real windows.
-// ?phone=1 forces the phone map for review.
-const coarseMQ = matchMedia('(pointer: coarse)');
-const phone = () => stacked() && (coarseMQ.matches || params.get('phone') === '1');
+// A small screen behaves like a phone whatever the pointer: the map, the
+// why page at the end, no welcome notification.
+const phone = () => stacked();
 const portrait = () => { const r = $('#workspace').getBoundingClientRect(); return r.height > r.width; };
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const stackedMQ = matchMedia('(max-width: 47.99em)');
@@ -1473,8 +1472,8 @@ function finishTour() {
   doneToast('All done!');
 }
 
-// On a phone the tour ends on the why page itself: the browser goes full
-// screen and shows its content. (The desktop keeps its three windows.)
+// On a small screen the tour ends on the why page alone: the other windows
+// close and the browser goes full screen. (A wide desktop keeps all three.)
 function phoneEnd() {
   if (!phone()) return;
   const b = state.windows.find(w => w.app === 'browser' && w.ws === state.ws);
