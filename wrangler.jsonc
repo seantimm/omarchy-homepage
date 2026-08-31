@@ -1,0 +1,9 @@
+{
+  // omarchy.seantimm.com — the First Boot page as a static-assets Worker.
+  // `wrangler deploy` uploads the repo root (minus .assetsignore) and creates the
+  // custom domain's DNS record and certificate on the seantimm.com zone.
+  "name": "omarchy-homepage",
+  "compatibility_date": "2026-04-01",
+  "assets": { "directory": "./" },
+  "routes": [{ "pattern": "omarchy.seantimm.com", "custom_domain": true }]
+}

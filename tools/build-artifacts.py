@@ -5,8 +5,8 @@ Usage: python3 tools/build-artifacts.py <out-dir>   then publish <out-dir>/<slug
 import re, sys, pathlib
 out = pathlib.Path(sys.argv[1]); out.mkdir(parents=True, exist_ok=True)
 root = pathlib.Path(__file__).resolve().parent.parent
-for slug, title in {'super-k': 'Omarchy Super + K', 'first-boot': 'Omarchy First Boot', 'workspace': 'Omarchy Workspace'}.items():
-    s = (root / slug / 'index.html').read_text(encoding='utf-8')
+for slug, (where, title) in {'super-k': ('super-k', 'Omarchy Super + K'), 'first-boot': ('.', 'Omarchy First Boot'), 'workspace': ('workspace', 'Omarchy Workspace')}.items():
+    s = (root / where / 'index.html').read_text(encoding='utf-8')
     body_attr = re.search(r'<body([^>]*)>', s).group(1); html_attr = re.search(r'<html([^>]*)>', s).group(1)
     s = re.sub(r'<!doctype html>\s*', '', s, flags=re.I); s = re.sub(r'<html[^>]*>\s*', '', s, count=1); s = s.replace('</html>', '')
     s = re.sub(r'<head>\s*', '', s, count=1); s = s.replace('</head>', ''); s = re.sub(r'<body[^>]*>\s*', '', s, count=1); s = s.replace('</body>', '')

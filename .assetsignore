@@ -1,0 +1,11 @@
+# Only the page and what it loads are served; the rest of the repo stays out of the deploy.
+.git
+.gitignore
+.assetsignore
+.wrangler
+wrangler.jsonc
+README.md
+LICENSES.md
+tools
+super-k
+workspace
