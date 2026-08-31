@@ -76,8 +76,6 @@ canvas.art { display: block; text-shadow: none }
 .bar__ws b.on { color: var(--accent); background: var(--selection) }
 .bar__clock { color: var(--fg-bright); font-weight: 400; font-variant-numeric: tabular-nums; white-space: pre }
 .bar__right { display: flex; justify-content: flex-end; align-items: center; gap: 12px }
-.bar__theme { background: none; border: 0; color: var(--fg); cursor: pointer; padding: 0; white-space: nowrap }
-.bar__theme:hover { color: var(--accent) }
 .bar__icons { display: flex; gap: 9px }
 .bar svg { width: 14px; height: 14px; display: block; fill: none; stroke: var(--fg); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round }
 .chip { border: 1px solid var(--muted); border-radius: 4px; padding: 1px 6px; font-size: 11px; color: var(--fg-dark); background: none; cursor: pointer; line-height: 1.4; white-space: nowrap }
@@ -364,7 +362,6 @@ body.cursor-hidden, body.cursor-hidden * { cursor: none !important }
     </div>
     <div class="bar__clock" id="clock"></div>
     <div class="bar__right">
-      <button class="bar__theme" id="themeName" type="button" title="Theme switcher — Shift + Space (Super and Ctrl are held for you)">tokyo-night</button>
       <div class="bar__icons" aria-hidden="true">
         <svg viewBox="0 0 16 16"><path d="M1.5 6.2a9.5 9.5 0 0 1 13 0"/><path d="M4 8.8a6 6 0 0 1 8 0"/><path d="M6.4 11.3a2.5 2.5 0 0 1 3.2 0"/><circle cx="8" cy="13.6" r=".7" fill="currentColor"/></svg>
         <svg viewBox="0 0 16 16"><path d="M2 6h3l4-3v10l-4-3H2z"/><path d="M11.5 5.5a3.5 3.5 0 0 1 0 5"/><path d="M13.2 3.5a6 6 0 0 1 0 9"/></svg>
@@ -575,7 +572,6 @@ function applyTheme(name, persist = true) {
   root.style.colorScheme = t.mode;
   root.dataset.theme = name;
   root.dataset.mode = t.mode;
-  $('#themeName').textContent = name;
   document.querySelectorAll('[data-theme-line]').forEach(n => { n.textContent = name; });
   const hl = NVIM_HL[name] || { header: t.accent, icon: t.cyan, desc: t.cyan, key: t.orange, special: t.cyan };
   for (const k of ['header', 'icon', 'desc', 'key', 'special']) root.style.setProperty('--nvim-' + k, hl[k]);
@@ -1856,7 +1852,6 @@ function start() {
   setInterval(tick, 15000);
 
   $('#bootSkip').addEventListener('click', skipBoot);
-  $('#themeName').addEventListener('click', () => act('theme'));
   $('#chipK').addEventListener('click', () => act('sheet'));
   $('#barMenu').innerHTML = iconSVG();
   $('#barMenu').addEventListener('click', () => act('menu'));
