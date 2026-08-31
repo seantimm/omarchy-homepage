@@ -1,0 +1,55 @@
+# Omarchy homepage — three concepts
+
+Submissions for DHH's call to redesign omarchy.org (x.com/dhh/status/2093946369731854766, Aug 30 2026 → design@omarchy.org).
+
+Each concept is one self-contained `index.html`: no build, no framework, JetBrains Mono from Google Fonts, the real ASCII logo/icon from the omarchy repo, and all 22 shipped theme palettes lifted verbatim from `themes/*/colors.toml`, with each theme's `preview.png` embedded (1024px WebP) for the switcher. Every page opens Omarchy's theme switcher on `Super + Ctrl + Shift + Space` (`Shift + Space` on your keyboard: the page holds Super and Ctrl) — the carousel of theme previews from `omarchy-menu-images`: ←/→ to browse, type to filter, ↵ to apply — and remembers the choice.
+
+Run locally:
+
+    python3 -m http.server 8765
+    open http://127.0.0.1:8765/super-k/   (or /first-boot/, /workspace/)
+
+`shared/omarchy-data.js` is the source of truth for the logo, palettes, links, videos and copy; each page inlines it.
+
+## 1. Super + K — `super-k/`
+
+The whole homepage is one keystroke. Two giant keycaps, "Press it." Pressing Super + K (or K, Enter, a tap) opens Omarchy's keybindings cheat sheet — and the bindings are the site: `SUPER + RETURN → Download the ISO`, `SUPER + M → The Manual`, … Type to filter, arrows, Enter. `SUPER + Y` opens the videos, `SUPER + SPACE` the About window (fastfetch-style, with the About-screen sheen animation).
+
+Why: the first thing a new Omarchy user sees is the welcome notification *"Learn Keybindings — Super + K for cheatsheet."* This page is that moment.
+
+## 2. First Boot — `first-boot/`
+
+The page boots Omarchy — limine line, cryptroot passphrase, the logo resolving out of noise with the sheen sweep — then drops you on a Hyprland desktop with the real welcome toast and walks you through the manual's Navigation chapter, key by key: terminal (a bare Starship `~ ❯` prompt, exactly like the manual's screenshots — fastfetch lives in the floating About window, under Super + Space › About), browser (tiles beside it — Chromium's real two-row chrome, opened on `omarchy.org/why`: the pitch in DHH's own words — nine verbatim quotes from the Lex Fridman Podcast #501 (Aug 2026), his blog and the Omacom Foundation announcement, each linked to where he said it, with the copy between them written in his voice, and a *Get started → Download the ISO* banner that stays pinned to the top of the page as it scrolls — rendered the way the site renders, in the site's own Tokyo Night colors — websites don't follow your desktop theme, only the browser chrome does), stack, swap (only where there's a neighbour to swap with — `Super + Shift + ↑` on the top pane does nothing, as on Omarchy; the coach's arrow keycap shows the direction that currently works), hop focus to the other pane and back, pop the active pane out (`Super + O` — it floats and follows you to the next workspace), tile it back, the editor (Neovim on LazyVim's dashboard, its colors resolved with headless `nvim` from each theme's real colorscheme for all 22 themes — the seven that ship no `neovim.lua` go through Omarchy's generated `aether` colorscheme fed the theme's `colors.toml`, exactly as `omarchy-theme-set` does), close it again (`Super + W`, the manual's own line — the browser takes its column back, so the why page reads at full height for the rest of the tour; closing focuses the window that fills the space, as dwindle does), over to the other column, Files (Nautilus as it opens on a fresh Omarchy home, in its default grid view — Adwaita chrome, Yaru folder icons in the theme's icon color, the five XDG folders and the four provisioned bookmarks — it splits the terminal's column), the theme switcher, and finally Super + K. Tiling follows Omarchy's dwindle config (`preserve_split = true, force_split = 2`): a new window splits the *focused* pane, side by side if it's wider than tall and stacked otherwise, and lands to its right or below. Activity (btop) lives in the menu under Apps; `Super + Shift + Y` opens YouTube as a web app with the five videos, Omarchy's real binding. Launchers without a `focus` flag in `bindings.lua` (browser, editor, files, btop) open a new instance every time, like the real ones. Every window is homepage content. When the tour ends (or you skip it with Esc), the coach leaves and a notification takes its place — *All done! Get started: download the ISO* — the way the welcome notification arrived. Replay from the menu (System → Reboot).
+
+Review shortcuts: `?skip=1`, `?step=N`, `?theme=name`.
+
+## 3. Workspace — `workspace/`
+
+The most shippable: the complete current homepage (hero, news, install steps, five videos, community, patrons/sponsors/AIR/teams/foundation/security, credits) laid out as a dwindle-tiled Hyprland desktop. Four workspaces (`SUPER + 1–4`), `SUPER + arrows` focus, `SUPER + SHIFT + arrows` swap, `F` fullscreen, `J` split toggle, `W` close, `Backspace` transparency, `SHIFT + SPACE` theme, `K` cheat sheet, `Space` menu (with Restore windows); the bar toggle, `SUPER + SHIFT + SPACE`, is the one chord that wants the real Super key. Fully mouse-usable — and, as on Omarchy (`follow_mouse = 1`, `cursor.hide_on_key_press = true`), a key press hides the pointer and focus follows it only when it actually moves; a pane sliding under a resting pointer changes nothing. Stacks into a column on phones.
+
+Review shortcuts: `?ws=N`, `?open=k`, `?theme=name`.
+
+## Super is held for you
+
+"Super" is the Meta key (Cmd on Mac, Win key, Super on Linux), and browsers keep most Super chords for themselves: Cmd+T opens a tab, Cmd+W closes one, Cmd+1 switches tabs, Win+K casts, and on Omarchy itself Hyprland eats every Super chord before the browser sees it. There is no substitute modifier that's safe everywhere either.
+
+So the pages don't fight it: **they hold Super for you — and Ctrl.** Every chord shown is Omarchy's real one; the SUPER and CTRL keycaps are drawn already pressed; you press the rest. `SUPER + J` is `J`, `SUPER + SHIFT + ←` is `Shift + ←`, `SUPER + CTRL + SHIFT + SPACE` is `Shift + Space`. Nothing is remapped and nothing is invented, and no chord ever asks you for Ctrl: `Ctrl + T` is new-tab on Windows, Linux and Omarchy's own Chromium, and browsers reserve it outright.
+
+The keycaps make the split visible: SUPER (and CTRL, ALT) are drawn pressed — the page holds those — while SHIFT and the key are raised, because those are yours. So `Shift + Space` is the theme switcher on every page, during First Boot's tour and after it. The one casualty is the bar toggle, `SUPER + SHIFT + SPACE`: it collides with the theme chord once Ctrl is held, so it is the only binding that needs the real Super key (Cmd + Shift + Space on a Mac). A homepage can spare that one; the theme switcher it can't.
+
+The site's own link chords (`SUPER + M → The Manual`…) are fiction by design, but they stay clear of every window/tiling default, so a sheet that lists both never contradicts itself: the ISO is `SUPER + I`, Themes `SUPER + SHIFT + T`, Teams `SUPER + E`, Workstations `SUPER + R`, Foundation `SUPER + U`, and Watch is `SUPER + SHIFT + Y` — the chord Omarchy already uses for YouTube.
+
+On an actual Omarchy machine, Super + K opens the real cheat sheet — which is the joke.
+
+## Omawrite windows
+
+In Workspace, the text-only sections are documents in Omawrite (Omarchy's iA-Writer-style Markdown app): a dim `#`, links written as `[text](url)`, a caret in the focused doc, filename and word count in the status line. IBM Plex Mono stands in for iA Writer Mono, which is derived from it.
+
+## Working notes
+
+- Check and serve: `tools/check.sh`, then `python3 -m http.server 8765` **from the project root** (any other cwd gives 404s) and open `http://127.0.0.1:8765/<page>/`. Review params: `?step=N` / `?skip=1` (First Boot), `?ws=N` / `?open=k` (Workspace), `?open=1` (Super + K), `?theme=<name>` everywhere; add `&v=anything` to dodge the browser cache after an edit.
+- Private previews on claude.ai (rebuild with `python3 tools/build-artifacts.py <dir>` and republish to the same URL): [Super + K](https://claude.ai/code/artifact/e5fd8666-a040-43f6-9cb4-aece015041de) · [First Boot](https://claude.ai/code/artifact/8dda8d48-a17e-4a49-973e-2e6c2892927a) · [Workspace](https://claude.ai/code/artifact/2e2bc368-f500-49dd-8882-bca5913f0c2e). The artifact CSP blocks YouTube thumbnails and First Boot's jsDelivr block-glyph font (boot reveal only).
+- Source of truth for fidelity questions: clone `omacom/omarchy` (bindings in `default/hypr/bindings/*.lua`, `looknfeel.lua`, `input.lua`, `bin/omarchy-*`, `manual/`), `omacom/omarchy-site`, `omacom/omarchy-pkgs`. DHH's own screenshots live in `manual/images/`.
+- `omarchy.org/why` (First Boot's browser window) is fiction by design, but every quote on it is verbatim and was checked against the primary text: the Lex Fridman #501 transcript (lexfridman.com/dhh-2-transcript/, timestamps in the links are the video's) DHH's posts on world.hey.com/dhh, and omarchy.org/news. The paragraphs between the quotes are ours, written in his voice — rewrite freely, but don't touch the quotes without re-checking the source.
+- Data that came from real sources and is checked in: `shared/omarchy-data.js` (22 palettes), `shared/nvim-hl.js` (dashboard colors via headless nvim, see `tools/README.md`), `shared/icon-themes.js`, `shared/theme-previews/*.webp`.
+- Not done: real hosting for the submission itself (GitHub Pages or Cloudflare Pages). Pages are ~1.9 MB each because the 22 previews are embedded; once hosted they can be plain files.
