@@ -318,7 +318,7 @@ body.cursor-hidden, body.cursor-hidden * { cursor: none !important }
 .phone .win:not(.full):not(.win--browser) .win-body { display: none }
 .phone .win:not(.full):not(.win--browser) .win__label { display: flex }
 @media (max-width: 47.99em) {
-  .bar .chip { display: none }
+  .bar .chip--held { display: none }   /* SUPER + K stays: the tap into the cheat sheet */
   .row { white-space: normal; flex-wrap: wrap }
   .row .chord { width: auto; margin-right: 1ch; font-size: 11px }
   .list__desc { height: calc(3 * 1.45em + 16px); -webkit-line-clamp: 3 }
