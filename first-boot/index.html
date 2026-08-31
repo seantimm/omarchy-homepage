@@ -141,6 +141,8 @@ body.cursor-hidden, body.cursor-hidden * { cursor: none !important }
 .site--why { padding-top: 0 }
 .site__banner { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 -22px 22px; padding: 8px 22px; background: #16161e; border-bottom: 1px solid var(--s-line); font-size: 11.5px; white-space: nowrap }
 .site__banner small { display: none; font-size: inherit }
+.site__banner em { font-style: normal }
+@container (max-width: 470px) { .site__banner em { display: none } }
 .site__banner span { color: var(--s-fg) }
 .site__banner span b { color: var(--s-white); font-weight: 700 }
 .site__banner a { flex: none; color: var(--s-bg); background: var(--s-blue); font-weight: 700; text-decoration: none; padding: 4px 10px; border-radius: 4px }
@@ -295,17 +297,23 @@ body.cursor-hidden, body.cursor-hidden * { cursor: none !important }
 .screen .big { font-size: clamp(40px, 8vw, 72px); font-weight: 300; color: var(--fg-bright); line-height: 1 }
 .screen .art { font-size: var(--logo-size) }
 
+/* Phones: the desktop is a map. Every window is a labelled box in the real dwindle
+   layout, so the tour's moves stay visible; a window shows its content only full
+   screen — the why page when the tour ends, or any box you tap after it. */
+.win__label { display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-width: 0; padding: 8px; text-align: center }
+.win__label b { color: var(--fg-bright); font-weight: 500; font-size: 13px }
+.win__label span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--fg-dark); font-size: 11px }
+.phone .win:not(.full) .win-body { display: none }
+.phone .win:not(.full) .win__label { display: flex }
 @media (max-width: 47.99em) {
   .bar .chip { display: none }
-  #windows { overflow-y: auto; display: flex; flex-direction: column; gap: var(--gap); padding: var(--gap) var(--gap) 200px }
-  .win { position: relative !important; left: auto !important; top: auto !important; width: auto !important; height: 68vh !important; flex: none }
-  .win.full { height: calc(100vh - var(--bar)) !important }
   .row { white-space: normal; flex-wrap: wrap }
   .row .chord { width: auto; margin-right: 1ch; font-size: 11px }
-  .coach { bottom: 10px }
+  .coach { position: static; transform: none; width: auto; flex: none; margin: 0 var(--gap) var(--gap); padding: 12px 14px 10px }
+  .toasts { left: 10px; right: 10px; width: auto }
 }
 @media (max-width: 40em) {
-  .bar__theme, .bar .chip { display: none }
+  .bar__date { display: none }
 }
 @media (max-width: 1300px) { :root { --logo-size: 10px } }
 @media (max-width: 900px) { :root { --logo-size: 8.333px } }
@@ -481,6 +489,11 @@ const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls)
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const wait = ms => new Promise(r => setTimeout(r, ms));
 const params = new URLSearchParams(location.search);
+// A phone is narrow and touch-driven; a narrow desktop pane keeps real windows.
+// ?phone=1 forces the phone map for review.
+const coarseMQ = matchMedia('(pointer: coarse)');
+const phone = () => stacked() && (coarseMQ.matches || params.get('phone') === '1');
+const portrait = () => { const r = $('#workspace').getBoundingClientRect(); return r.height > r.width; };
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const stackedMQ = matchMedia('(max-width: 47.99em)');
 const stacked = () => stackedMQ.matches;
@@ -643,9 +656,15 @@ function openWindow(app, opts = {}) {
   const win = { id: ++uid, app, ws: state.ws, floating: !!opts.floating, el: null, rect: null };
   win.el = el('div', 'win win--' + app);
   const body = el('div', 'win-body');
-  win.el.append(body);
+  const [name, detail] = LABELS[app];
+  win.el.append(body, el('div', 'win__label', `<b>${esc(name)}</b><span>${esc(detail)}</span>`));
   APPS[app].render(body, win);
   win.el.addEventListener('mousedown', () => { focusWindow(win); });
+  win.el.addEventListener('click', () => {
+    // On a phone, a tapped box opens full screen once the tour is over; the
+    // current workspace number in the bar (or Esc) brings the map back.
+    if (phone() && state.tourDone && !state.fullscreen && !list) { state.fullscreen = win; focusWindow(win); render(); }
+  });
   $('#windows').append(win.el);
   state.windows.push(win);
   if (!win.floating) attach(win);
@@ -699,15 +718,14 @@ function render() {
   const area = areaRect();
   if (area.w <= 0 || area.h <= 0) return;
   const ws = state.ws;
-  const column = stacked();
-  if (!column) layoutTree(trees[ws], area);
+  $('#desktop').classList.toggle('phone', phone());
+  layoutTree(trees[ws], area);
   const full = state.fullscreen && state.fullscreen.ws === ws ? state.fullscreen : null;
   for (const w of state.windows) {
     const show = (w.ws === ws || w.pinned) && (!full || w === full);
     w.el.hidden = !show;
     if (!show) continue;
     w.el.classList.toggle('full', w === full);
-    if (column) { w.el.style.cssText = ''; w.el.classList.remove('float'); continue; }
     let r;
     if (w === full) r = { x: 0, y: 0, w: area.w + 2 * GAP, h: area.h + 2 * GAP };
     else if (w.floating) {
@@ -941,6 +959,12 @@ function fastfetchHTML() {
   return `<div class="ff"><canvas class="art" data-art="icon" aria-hidden="true"></canvas><div>${rows.map(([k, v]) => `<b>${k}:</b> ${esc(v)}`).join('<br>')}<br><b>Theme:</b> <span data-theme-line>${theme}</span><div class="sw">${sw}</div></div></div>`;
 }
 
+// What a window's box says on the phone map.
+const LABELS = {
+  terminal: ['Terminal', '~ ❯'], browser: ['Chromium', 'omarchy.org/why'], editor: ['Neovim', 'LazyVim'],
+  files: ['Files', 'Home'], about: ['About', 'omarchy'], youtube: ['YouTube', 'omarchy'], activity: ['btop', 'Activity'],
+};
+
 const APPS = {
   // A terminal opens on a bare Starship prompt, like the real thing. fastfetch
   // is the About window's job (Super + Space › About), where it floats.
@@ -972,7 +996,7 @@ const APPS = {
         <div class="brw__tabs"><span class="brw__glyph">⌄</span><span class="brw__tab"><i></i>Why Omarchy? — Omarchy<b>×</b></span><span class="brw__glyph">+</span></div>
         <div class="brw__bar"><span class="brw__glyph">←</span><span class="brw__glyph">→</span><span class="brw__glyph">↻</span><span class="brw__omni">omarchy.org/why</span><span class="brw__glyph">☆</span><span class="brw__glyph">⋮</span></div>
         <div class="brw__page site site--why">
-          <div class="site__banner"><span><b>Get started.</b> Omarchy 4.0.1 "Quattro"<small> installs in under five minutes</small>.</span><a href="${ISO}">Download the ISO →</a></div>
+          <div class="site__banner"><span><b>Get started.</b><em> Omarchy 4.0.1 "Quattro"<small> installs in under five minutes</small>.</em></span><a href="${ISO}">Download the ISO →</a></div>
           <div class="site__pre"><canvas class="art" data-art="logo" role="img" aria-label="Omarchy"></canvas></div>
           <article class="site__art site__why">
             <h1>Why Omarchy?</h1>
@@ -1179,6 +1203,7 @@ window.addEventListener('resize', () => { if (picker.open) renderPicker(); });
 
 // ---------- list windows ----------
 const overlay = $('#overlay');
+overlay.addEventListener('click', e => { if (e.target === overlay) closeList(); });
 
 function openList(cfg) {
   closeList();
@@ -1193,6 +1218,7 @@ function openList(cfg) {
     <footer class="list__ft"><span>super held for you</span><span>↑↓ move</span><span>↵ open</span><span>esc ${cfg.back ? 'back' : 'close'}</span><span>type to filter</span></footer>`;
   overlay.hidden = false;
   overlay.append(box);
+  box.querySelector('.list__hdr kbd').addEventListener('click', () => (cfg.back || closeList)());
   const input = box.querySelector('input');
   list = { ...cfg, el: box, input, rowsEl: box.querySelector('.list__rows'), descEl: box.querySelector('.list__desc'), filtered: cfg.rows, sel: 0 };
   input.addEventListener('input', () => {
@@ -1359,7 +1385,7 @@ const STEPS = [
   // The words are the manual's (Navigation, Hotkeys, Themes) wherever a step exists there.
   { text: 'Everything in Omarchy happens via the keyboard — EVERYTHING! You start the terminal with Super + Return.', keys: ['SUPER', 'RETURN'], action: 'terminal' },
   { text: '…and a browser with Super + Shift + Return. Do one after the other, and you\'ll see the magic of Hyprland\'s tiling in action.', keys: ['SUPER', 'SHIFT', 'RETURN'], action: 'browser' },
-  { text: 'You can then hit Super + J to stack them on top of each other instead of side by side.', keys: ['SUPER', 'J'], action: 'togglesplit' },
+  { text: 'You can then hit Super + J to stack them on top of each other instead of side by side.', phoneText: 'You can then hit Super + J to put them side by side instead of stacked.', keys: ['SUPER', 'J'], action: 'togglesplit' },
   { text: 'Then try Super + Shift + Arrow to swap the windows. The active window moves, if there is somewhere for it to go.', keys: ['SUPER', 'SHIFT', '↕'], action: 'swap', any: true, axis: 'v' },
   { text: 'You navigate between windows with Super + Arrow. This switches focus.', keys: ['SUPER', '↕'], action: 'focus', any: true, axis: 'v' },
   { text: 'Super + Arrow again to come back.', keys: ['SUPER', '↕'], action: 'focus', any: true, axis: 'v' },
@@ -1369,18 +1395,20 @@ const STEPS = [
   { text: 'You can tile it again using Super + T (and hit that again to make it floating again).', keys: ['SUPER', 'T'], action: 'togglefloat' },
   { text: 'You launch the editor, Neovim, with Super + Shift + N.', keys: ['SUPER', 'SHIFT', 'N'], action: 'editor' },
   { text: 'You close a window on Super + W or Super + Q. Close the editor, and the browser gets its column back.', keys: ['SUPER', 'W'], action: 'close', arg: 'editor', real: true },
-  { text: 'Super + Arrow over to the other column.', keys: ['SUPER', '↔'], action: 'focus', any: true, axis: 'h' },
+  { text: 'Super + Arrow over to the other column.', phoneText: 'Super + Arrow over to the other window.', keys: ['SUPER', '↔'], action: 'focus', any: true, axis: 'h' },
   { text: 'Now press Super + Shift + F to open the file manager. The terminal makes room.', keys: ['SUPER', 'SHIFT', 'F'], action: 'files' },
   { text: 'Hop directly to a new theme using Super + Ctrl + Shift + Space.', keys: ['SUPER', 'CTRL', 'SHIFT', 'SPACE'], action: 'theme' },
   { text: 'You can see all the main keyboard bindings with Super + K.', keys: ['SUPER', 'K'], action: 'sheet' },
 ];
 // A ↕ or ↔ keycap shows the direction that has a neighbour right now, and
 // clicking it fires that one; the other direction would do nothing, as on Omarchy.
+// The step's own axis first; on a portrait screen the splits run the other
+// way (taller than wide), so the other axis is the fallback.
 function workingDir(s) {
   const f = state.focused;
-  if (s.axis === 'v') return neighbor(f, 'u') ? 'u' : 'd';
-  if (s.axis === 'h') return neighbor(f, 'l') ? 'l' : 'r';
-  return s.arg;
+  if (!s.axis) return s.arg;
+  const order = s.axis === 'v' ? ['u', 'd', 'l', 'r'] : ['l', 'r', 'u', 'd'];
+  return order.find(d => neighbor(f, d)) || order[0];
 }
 const ARROW_CAP = { u: '↑', d: '↓', l: '←', r: '→' };
 const capLabel = (s, k) => (k === '↕' || k === '↔') ? ARROW_CAP[workingDir(s)] : k;
@@ -1417,7 +1445,19 @@ function finishTour() {
   state.tourDone = true;
   if (welcomeToast) { welcomeToast.remove(); welcomeToast = null; }
   renderCoach();
+  phoneEnd();
   doneToast('All done!');
+}
+
+// On a phone the tour ends on the why page itself: the browser goes full
+// screen and shows its content. (The desktop keeps its three windows.)
+function phoneEnd() {
+  if (!phone()) return;
+  const b = state.windows.find(w => w.app === 'browser' && w.ws === state.ws);
+  if (!b) return;
+  state.fullscreen = b;
+  focusWindow(b);
+  render();
 }
 
 // The coach leaves with the tour; what stays is a notification, like the
@@ -1433,7 +1473,7 @@ function renderCoach() {
   const s = STEPS[state.tourStep];
   let note = '';
   if (state.tourStep === 0) note = 'Your browser keeps Super for itself, so this page holds it for you: a keycap drawn pressed is held, the rest is yours. The full chord works too, when your browser lets it through.';
-  c.innerHTML = `<p class="coach__text">${esc(s.text)}</p>
+  c.innerHTML = `<p class="coach__text">${esc(portrait() && s.phoneText || s.text)}</p>
     <div class="coach__keys" role="button" tabindex="0" title="${stacked() ? 'Tap' : 'Click'} to do it">${s.keys.map(k => `<kbd class="key${HELD.has(k) ? ' key--held' : ''}">${capLabel(s, k)}</kbd>`).join('<span class="plus">+</span>')}</div>
     ${note ? `<p class="coach__note">${note}</p>` : ''}
     <div class="coach__ft"><span class="dots">${STEPS.map((_, i) => `<i class="${i < state.tourStep ? 'done' : i === state.tourStep ? 'now' : ''}"></i>`).join('')}</span><a href="#" data-skip>skip tour</a></div>`;
@@ -1469,6 +1509,8 @@ function skipTour() {
   state.tourDone = true;
   instant(() => { for (const s of STEPS) if (s.action !== 'theme') s.fire(); });
   renderCoach();
+  if (phone()) closeList();
+  phoneEnd();
   doneToast('Tour skipped');
 }
 
@@ -1748,7 +1790,7 @@ function tick() {
   const d = new Date();
   const hm = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
   const date = `${DAYS[d.getDay()]} ${MONTHS[d.getMonth()]} ${d.getDate()}`;
-  $('#clock').textContent = `${date}  ${hm}`;
+  $('#clock').innerHTML = `<span class="bar__date">${date}  </span>${hm}`;
   $('#lockClock').textContent = hm;
   $('#lockDate').textContent = date;
 }
@@ -1766,10 +1808,14 @@ function start() {
   $('#bootSkip').addEventListener('click', skipBoot);
   $('#themeName').addEventListener('click', () => act('theme'));
   $('#chipK').addEventListener('click', () => act('sheet'));
-  document.querySelectorAll('.bar__ws b').forEach(b => b.addEventListener('click', () => act('workspace', +b.dataset.ws)));
+  document.querySelectorAll('.bar__ws b').forEach(b => b.addEventListener('click', () => {
+    const n = +b.dataset.ws;
+    if (n === state.ws && state.fullscreen) { state.fullscreen = null; render(); } else act('workspace', n);
+  }));
   $('#lock').addEventListener('click', hideScreens);
   $('#off').addEventListener('click', reboot);
   window.addEventListener('resize', render);
+  new ResizeObserver(() => render()).observe($('#workspace'));
   stackedMQ.addEventListener('change', render);
 
   const step = params.has('step') ? parseInt(params.get('step'), 10) : null;
