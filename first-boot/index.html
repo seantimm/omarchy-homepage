@@ -309,8 +309,12 @@ body.cursor-hidden, body.cursor-hidden * { cursor: none !important }
   .bar .chip { display: none }
   .row { white-space: normal; flex-wrap: wrap }
   .row .chord { width: auto; margin-right: 1ch; font-size: 11px }
-  .coach { position: static; transform: none; width: auto; flex: none; margin: 0 var(--gap) var(--gap); padding: 12px 14px 10px }
-  .toasts { left: 10px; right: 10px; width: auto }
+  .coach { position: static; transform: none; width: auto; flex: none; margin: 0 var(--gap) var(--gap); padding: 12px 14px 10px; order: 3 }
+  /* Notifications get their own strip under the bar instead of covering the first window. */
+  .bar { order: 0 }
+  .toasts { position: static; order: 1; width: auto; margin: var(--gap) var(--gap) 0; z-index: auto }
+  .toasts:empty { display: none }
+  .workspace { order: 2 }
 }
 @media (max-width: 40em) {
   .bar__date { display: none }
