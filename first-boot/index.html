@@ -66,6 +66,10 @@ canvas.art { display: block; text-shadow: none }
 .desktop.in { opacity: 1 }
 .bar { height: var(--bar); flex: none; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 12px; background: var(--bg-dark); border-bottom: 1px solid var(--muted); font-size: 12px; user-select: none }
 .desktop.nobar .bar { display: none }
+.bar__left { display: flex; align-items: center; gap: 10px }
+.bar__omarchy { background: none; border: 0; padding: 0; width: 16px; height: 16px; display: grid; place-items: center; color: var(--fg); cursor: pointer }
+.bar__omarchy svg { width: 14px; height: 14px; display: block }
+.bar__omarchy:hover { color: var(--accent) }
 .bar__ws { display: flex; gap: 4px }
 .bar__ws b { font-weight: 500; color: var(--fg-dark); cursor: pointer; padding: 0 5px; border-radius: 3px; line-height: 18px }
 .bar__ws b.has { color: var(--fg) }
@@ -209,7 +213,7 @@ body.cursor-hidden, body.cursor-hidden * { cursor: none !important }
 
 /* nautilus: Adwaita, not the desktop palette; dark by default, light for light themes */
 .nau { --n-bg: #1e1e1e; --n-side: #2a2a2a; --n-hb: #303030; --n-fg: #ffffff; --n-dim: #9a9a9a; --n-sel: #454545; --n-line: rgba(255,255,255,.08); --n-pill: #3b3b3b; --n-folder: #8d8d8d; --n-glyph: #2f2f2f;
-  display: grid; height: 100%; grid-template-columns: 150px 1fr; font-family: "Inter", "Cantarell", system-ui, sans-serif; font-size: 12.5px; background: var(--n-bg); color: var(--n-fg) }
+  display: grid; height: 100%; position: relative; grid-template-columns: 150px 1fr; font-family: "Inter", "Cantarell", system-ui, sans-serif; font-size: 12.5px; background: var(--n-bg); color: var(--n-fg) }
 :root[data-mode="light"] .nau { --n-bg: #fafafa; --n-side: #f0f0f0; --n-hb: #ebebeb; --n-fg: #2e2e2e; --n-dim: #6f6f6f; --n-sel: #dadada; --n-line: rgba(0,0,0,.08); --n-pill: #e2e2e2; --n-folder: #c9c9c9; --n-glyph: #4a4a4a }
 .nau svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; flex: none }
 .nau__side { background: var(--n-side); border-right: 1px solid var(--n-line); display: flex; flex-direction: column; min-height: 0 }
@@ -227,6 +231,15 @@ body.cursor-hidden, body.cursor-hidden * { cursor: none !important }
 .nau__cell { display: grid; justify-items: center; gap: 8px; padding: 10px 6px; border-radius: 8px }
 .nau__cell span { font-size: 12.5px }
 .nau svg.nau__big { width: 80px; height: 65px; stroke: none }
+/* Nautilus collapses its split view under 682sp (nautilus-window.blp): the
+   sidebar goes behind a toolbar button and slides over the files. */
+.nau__sidebtn { display: none }
+@container (max-width: 682px) {
+  .nau__main { grid-column: 1 / -1 }
+  .nau__side { display: none; position: absolute; top: 0; bottom: 0; left: 0; width: 200px; z-index: 2; box-shadow: 8px 0 24px rgb(0 0 0 / .35) }
+  .nau--side .nau__side { display: flex }
+  .nau__sidebtn { display: grid }
+}
 
 /* list windows: keybindings sheet and the menu */
 .overlay { position: absolute; inset: 0; z-index: 20; display: grid; place-items: center; pointer-events: none }
@@ -246,7 +259,7 @@ body.cursor-hidden, body.cursor-hidden * { cursor: none !important }
 .row .lbl { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis }
 .row .sub { color: var(--fg-dark) }
 .row .chk { color: var(--green); margin-left: 1ch }
-.list__desc { padding: 8px 14px; border-top: 1px solid var(--muted); color: var(--fg-dark); font-size: 12px; min-height: 2.5em }
+.list__desc { padding: 8px 14px; border-top: 1px solid var(--muted); color: var(--fg-dark); font-size: 12px; line-height: 1.45; height: calc(2 * 1.45em + 16px); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical }
 .list__ft { display: flex; gap: 18px; padding: 6px 14px 8px; color: var(--fg-dark); font-size: 11px; border-top: 1px solid var(--muted) }
 
 /* toasts */
@@ -309,6 +322,7 @@ body.cursor-hidden, body.cursor-hidden * { cursor: none !important }
   .bar .chip { display: none }
   .row { white-space: normal; flex-wrap: wrap }
   .row .chord { width: auto; margin-right: 1ch; font-size: 11px }
+  .list__desc { height: calc(3 * 1.45em + 16px); -webkit-line-clamp: 3 }
   .coach { position: static; transform: none; width: auto; flex: none; margin: 0 var(--gap) var(--gap); padding: 12px 14px 10px; order: 3 }
   /* Notifications get their own strip under the bar instead of covering the first window. */
   .bar { order: 0 }
@@ -341,9 +355,12 @@ body.cursor-hidden, body.cursor-hidden * { cursor: none !important }
 
 <div id="desktop" class="desktop" hidden>
   <header class="bar" id="bar">
-    <nav class="bar__ws" aria-label="Workspaces">
-      <b data-ws="1">1</b><b data-ws="2">2</b><b data-ws="3">3</b><b data-ws="4">4</b><b data-ws="5">5</b>
-    </nav>
+    <div class="bar__left">
+      <button class="bar__omarchy" id="barMenu" type="button" title="Omarchy menu (Super + Space)" aria-label="Omarchy menu"></button>
+      <nav class="bar__ws" aria-label="Workspaces">
+        <b data-ws="1">1</b><b data-ws="2">2</b><b data-ws="3">3</b><b data-ws="4">4</b><b data-ws="5">5</b>
+      </nav>
+    </div>
     <div class="bar__clock" id="clock"></div>
     <div class="bar__right">
       <button class="bar__theme" id="themeName" type="button" title="Theme switcher — Shift + Space (Super and Ctrl are held for you)">tokyo-night</button>
@@ -1098,6 +1115,7 @@ const APPS = {
         list: svg('<path d="M2.5 4h11M2.5 8h11M2.5 12h11"/>'),
         down: svg('<path d="M4 6.5 8 10.5l4-4"/>'),
         close: svg('<path d="M4 4l8 8M12 4l-8 8"/>'),
+        sidebar: svg('<rect x="2" y="3.5" width="12" height="9" rx="1.5"/><path d="M2.5 4h3.5v8H2.5z" fill="currentColor" stroke="none"/>'),
         dots: svg('<circle cx="8" cy="3.5" r="1.1" fill="currentColor"/><circle cx="8" cy="8" r="1.1" fill="currentColor"/><circle cx="8" cy="12.5" r="1.1" fill="currentColor"/>'),
       };
       const glyph = {
@@ -1118,9 +1136,11 @@ const APPS = {
           <ul class="nau__places nau__marks">${marks.map(n => `<li>${ic.folder}${n}</li>`).join('')}</ul>
         </aside>
         <div class="nau__main">
-          <div class="nau__hb"><span class="nau__btn">${ic.back}</span><span class="nau__btn">${ic.fwd}</span><span class="nau__path">${ic.home}<span>Home</span>${ic.dots}</span><span class="nau__btn">${ic.search}</span><span class="nau__btn">${ic.list}</span><span class="nau__btn">${ic.down}</span><span class="nau__btn">${ic.close}</span></div>
+          <div class="nau__hb"><span class="nau__btn nau__sidebtn" role="button" aria-label="Show sidebar">${ic.sidebar}</span><span class="nau__btn">${ic.back}</span><span class="nau__btn">${ic.fwd}</span><span class="nau__path">${ic.home}<span>Home</span>${ic.dots}</span><span class="nau__btn">${ic.search}</span><span class="nau__btn">${ic.list}</span><span class="nau__btn">${ic.down}</span><span class="nau__btn">${ic.close}</span></div>
           <div class="nau__grid">${dirs.map(d => `<div class="nau__cell">${folder(d)}<span>${d}</span></div>`).join('')}</div>
         </div>`;
+      body.querySelector('.nau__sidebtn').addEventListener('click', e => { e.stopPropagation(); body.classList.toggle('nau--side'); });
+      body.querySelector('.nau__grid').addEventListener('click', () => body.classList.remove('nau--side'));
     },
   },
 };
@@ -1261,17 +1281,17 @@ function closeList() {
 
 function runRow(r) { if (r) r.run(); }
 
-function drawRows() {
+function drawRows(scroll = true) {
   if (!list) return;
   const { rowsEl, filtered, sel } = list;
   rowsEl.innerHTML = filtered.length
     ? filtered.map((r, i) => `<div class="row${i === sel ? ' sel' : ''}" role="option" aria-selected="${i === sel}" data-i="${i}">${r.chord ? `<span class="chord">${esc(r.chord)}</span><span class="arrow">→</span>` : ''}<span class="lbl">${esc(r.label)}</span>${r.sub ? '<span class="sub">›</span>' : ''}${r.checked && r.checked() ? '<span class="chk">✓</span>' : ''}</div>`).join('')
     : '<div class="row none">Nothing matches. Try “iso”.</div>';
   rowsEl.querySelectorAll('.row[data-i]').forEach(n => {
-    n.addEventListener('mousemove', e => { if (e.clientX === pointer.x && e.clientY === pointer.y) return; const i = +n.dataset.i; if (i !== list.sel) { list.sel = i; drawRows(); } });
+    n.addEventListener('mousemove', e => { if (e.clientX === pointer.x && e.clientY === pointer.y) return; const i = +n.dataset.i; if (i !== list.sel) { list.sel = i; drawRows(false); } });
     n.addEventListener('click', () => runRow(list.filtered[+n.dataset.i]));
   });
-  rowsEl.querySelector('.row.sel')?.scrollIntoView({ block: 'nearest' });
+  if (scroll) rowsEl.querySelector('.row.sel')?.scrollIntoView({ block: 'nearest' });
   list.descEl.textContent = (filtered[sel] && filtered[sel].desc) || '';
 }
 
@@ -1459,6 +1479,7 @@ function phoneEnd() {
   if (!phone()) return;
   const b = state.windows.find(w => w.app === 'browser' && w.ws === state.ws);
   if (!b) return;
+  for (const w of [...state.windows]) if (w !== b && (w.ws === state.ws || w.pinned)) closeWindow(w);   // no room for the rest on a phone
   state.fullscreen = b;
   focusWindow(b);
   render();
@@ -1467,7 +1488,7 @@ function phoneEnd() {
 // The coach leaves with the tour; what stays is a notification, like the
 // welcome one: the ISO, and the way back to the cheat sheet.
 function doneToast(title) {
-  toast('Get started: download the ISO.\nSuper + K brings the cheatsheet back.', { title, sticky: true, href: ISO });
+  toast(phone() ? 'Get started: download the ISO.\nThe Omarchy icon in the bar is the menu.' : 'Get started: download the ISO.\nSuper + K brings the cheatsheet back.', { title, sticky: true, href: ISO });
 }
 
 function renderCoach() {
@@ -1789,6 +1810,25 @@ window.addEventListener('keydown', e => {
 });
 
 // ---------- chrome ----------
+// The Omarchy icon for the bar, from icon.txt (each character is one cell wide
+// and two tall, as the About window paints it).
+function iconSVG() {
+  const lines = ICON.replace(/^\n|\n$/g, '').split('\n');
+  const w = Math.max(...lines.map(l => l.length));
+  let d = '';
+  lines.forEach((line, y) => {
+    let x = 0;
+    while (x < line.length) {
+      if (line[x] !== '█') { x++; continue; }
+      let x2 = x;
+      while (line[x2 + 1] === '█') x2++;
+      d += `M${x} ${y * 2}h${x2 - x + 1}v2h-${x2 - x + 1}z`;
+      x = x2 + 1;
+    }
+  });
+  return `<svg viewBox="0 0 ${w} ${lines.length * 2}" aria-hidden="true"><path d="${d}" fill="currentColor"/></svg>`;
+}
+
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -1814,6 +1854,8 @@ function start() {
   $('#bootSkip').addEventListener('click', skipBoot);
   $('#themeName').addEventListener('click', () => act('theme'));
   $('#chipK').addEventListener('click', () => act('sheet'));
+  $('#barMenu').innerHTML = iconSVG();
+  $('#barMenu').addEventListener('click', () => act('menu'));
   document.querySelectorAll('.bar__ws b').forEach(b => b.addEventListener('click', () => {
     const n = +b.dataset.ws;
     if (n === state.ws && state.fullscreen) { state.fullscreen = null; render(); } else act('workspace', n);
