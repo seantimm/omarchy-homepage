@@ -863,7 +863,10 @@ function moveToWorkspace(n) {
   render();
 }
 
-function toggleBar() { $('#desktop').classList.toggle('nobar'); render(); }
+function toggleBar() {
+  if (phone()) return false;   // on a small screen the bar is the only way back to the menu
+  $('#desktop').classList.toggle('nobar'); render();
+}
 function toggleGlass() { $('#desktop').classList.toggle('glass'); }
 
 // ---------- apps ----------
@@ -1487,6 +1490,7 @@ function phoneEnd() {
 // The coach leaves with the tour; what stays is a notification, like the
 // welcome one: the ISO, and the way back to the cheat sheet.
 function doneToast(title) {
+  if (phone()) return;   // the why page's own banner is the call to action there
   toast(phone() ? 'Get started: download the ISO.\nThe Omarchy icon in the bar is the menu.' : 'Get started: download the ISO.\nSuper + K brings the cheatsheet back.', { title, sticky: true, href: ISO });
 }
 
@@ -1863,6 +1867,9 @@ function start() {
   $('#off').addEventListener('click', reboot);
   window.addEventListener('resize', render);
   new ResizeObserver(() => render()).observe($('#workspace'));
+  // Widening past the small-screen breakpoint leaves the map: a full-screen
+  // window would hide everything opened after it.
+  stackedMQ.addEventListener('change', e => { if (!e.matches && state.fullscreen) state.fullscreen = null; render(); if (!state.tourDone) renderCoach(); });
   stackedMQ.addEventListener('change', render);
 
   const step = params.has('step') ? parseInt(params.get('step'), 10) : null;
