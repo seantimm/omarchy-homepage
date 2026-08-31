@@ -1521,7 +1521,9 @@ function applySteps(n) {
 }
 
 function startTour() {
-  if (!state.tourDone && !welcomeToast) {
+  // The welcome notification is about the keyboard; a phone has none, and it
+  // would sit on the map.
+  if (!state.tourDone && !welcomeToast && !phone()) {
     welcomeToast = toast(COPY.welcomeBody, { title: COPY.welcomeTitle, sticky: true, onClick: () => act('sheet') });
   }
   renderCoach();
