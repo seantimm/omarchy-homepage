@@ -316,8 +316,9 @@ body.cursor-hidden, body.cursor-hidden * { cursor: none !important }
 .win__label { display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-width: 0; padding: 8px; text-align: center }
 .win__label b { color: var(--fg-bright); font-weight: 500; font-size: 13px }
 .win__label span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--fg-dark); font-size: 11px }
-.phone .win:not(.full) .win-body { display: none }
-.phone .win:not(.full) .win__label { display: flex }
+/* The browser keeps its page in the map: that content is the point. */
+.phone .win:not(.full):not(.win--browser) .win-body { display: none }
+.phone .win:not(.full):not(.win--browser) .win__label { display: flex }
 @media (max-width: 47.99em) {
   .bar .chip { display: none }
   .row { white-space: normal; flex-wrap: wrap }
