@@ -1175,11 +1175,15 @@ const APPS = {
   },
 };
 
-// The 22 previews (1024px WebP, ~65 KB each) live in shared/theme-previews/.
-// The picker is a minute into the tour, so once the desktop is up they load in
-// the background — the current theme first, then outward from it the way the
-// carousel fans them — unless the visitor asked for data saving.
+// The 22 previews live in shared/theme-previews/ at two sizes: 1024px for 1×
+// screens and the source's full 1800px for denser ones (the front preview is
+// 768 CSS px wide, so a Retina display wants 1536). The picker is a minute into
+// the tour, so once the desktop is up they load in the background — the current
+// theme first, then outward from it the way the carousel fans them — unless the
+// visitor asked for data saving.
 const previewURL = n => `shared/theme-previews/${n}.webp`;
+const previewSrcset = n => `${previewURL(n)} 1024w, shared/theme-previews/${n}-1800.webp 1800w`;
+const PREVIEW_SIZES = '768px';
 let prefetched = false;
 function prefetchPreviews() {
   if (prefetched || navigator.connection?.saveData) return;
@@ -1193,6 +1197,8 @@ function prefetchPreviews() {
     const img = new Image();
     img.fetchPriority = 'low';
     img.onload = img.onerror = next;
+    img.sizes = PREVIEW_SIZES;
+    img.srcset = previewSrcset(n);
     img.src = previewURL(n);
     keep.push(img);
   };
@@ -1210,7 +1216,7 @@ function openThemePicker() {
   const box = $('#picker');
   box.hidden = false;
   const stage = $('#pickerStage');
-  stage.innerHTML = THEME_NAMES.map((n, i) => `<div class="picker__item" data-i="${i}"><img src="${previewURL(n)}" alt="${themeLabel(n)}" decoding="async"></div>`).join('');
+  stage.innerHTML = THEME_NAMES.map((n, i) => `<div class="picker__item" data-i="${i}"><img src="${previewURL(n)}" srcset="${previewSrcset(n)}" sizes="${PREVIEW_SIZES}" alt="${themeLabel(n)}" decoding="async"></div>`).join('');
   stage.querySelectorAll('.picker__item').forEach(it => it.addEventListener('click', () => { const i = +it.dataset.i; if (i === picker.sel) applyPicked(); else { picker.sel = i; renderPicker(); } }));
   renderPicker();
 }
